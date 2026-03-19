@@ -113,23 +113,23 @@
 
         <!-- SECTION 2: DASHBOARD VIEW -->
         <section id="dashboardView" class="view-section">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6">Tiến trình học tập</h2>
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center md:text-left">Tiến trình học tập</h2>
             
             <!-- Thống kê tổng quát -->
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-slate-400 text-xs font-bold uppercase mb-1">Đã hoàn thành</p>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Đã hoàn thành</p>
                     <p class="text-3xl font-black text-slate-800" id="statsCompleted">0</p>
                     <p class="text-[10px] text-slate-400 mt-1">Bài test</p>
                 </div>
                 <div class="bg-blue-600 p-5 rounded-3xl shadow-lg shadow-blue-100">
-                    <p class="text-blue-200 text-xs font-bold uppercase mb-1">Tỉ lệ đúng</p>
+                    <p class="text-blue-200 text-[10px] font-bold uppercase mb-1">Tỉ lệ đúng</p>
                     <p class="text-3xl font-black text-white" id="statsAvg">0%</p>
                     <p class="text-[10px] text-blue-200 mt-1">Trung bình</p>
                 </div>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-800 mb-4">Chi tiết từng bài</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-4">Chi tiết thành tích</h3>
             <div id="dashboardList" class="space-y-3">
                 <!-- Danh sách bài test sẽ render ở đây -->
             </div>
@@ -169,7 +169,7 @@
         const allTests = {
             'test3': {
                 title: 'Test 03',
-                desc: 'Đề thi thực tế - Part 5',
+                desc: 'Đề thi thực tế - Part 5 Incomplete Sentences',
                 questions: [
                     { id: 101, q: "Despite ------ youth, Ms. Cho is already quite popular on social media.", options: ["she", "her", "hers", "herself"], a: "B" },
                     { id: 102, q: "Most of the materials distributed at last month's accounting conference are now ------- online.", options: ["available", "intended", "comparable", "decisive"], a: "A" },
@@ -205,7 +205,7 @@
             },
             'test4': {
                 title: 'Test 04',
-                desc: 'Đề thi thực tế - Part 5',
+                desc: 'Đề thi thực tế - Part 5 Incomplete Sentences',
                 questions: [
                     { id: 101, q: "Ms. Chiu recently announced that ------- is planning to retire in September.", options: ["her", "hers", "herself", "she"], a: "D" },
                     { id: 102, q: "Mr. Kashnitz will interview the applicants ------- the holiday.", options: ["above", "before", "among", "along"], a: "B" },
@@ -241,7 +241,7 @@
             },
             'test5': {
                 title: 'Test 05',
-                desc: 'Đề thi thực tế - Part 5',
+                desc: 'Đề thi thực tế - Part 5 Incomplete Sentences',
                 questions: [
                     { id: 101, q: "Mr. Choi, who recently joined the advisory board, is an experienced accountant ------- investor.", options: ["but", "that", "and", "yet"], a: "C" },
                     { id: 102, q: "The first 150 visitors to the new fitness park will each receive a complimentary water -------.", options: ["bottle", "bottled", "bottling", "to bottle"], a: "A" },
@@ -271,7 +271,7 @@
                     { id: 126, q: "Mr. Sato will call into the meeting ------- the hotel's wireless network.", options: ["used", "using", "use", "had used"], a: "B" },
                     { id: 127, q: "Not only has Mr. Ogbu ------- worked on the project, but he has also trained Ms. Jeong to continue the work.", options: ["accessibly", "diligently", "eventfully", "completely"], a: "B" },
                     { id: 128, q: "Belker Auto offers a ten-year warranty for ------- who want greater peace of mind.", options: ["this", "those", "somebody", "everyone"], a: "B" },
-                    { id: 129, q: "After months of planning, the Lanton Bookstore school reading program sẽ ------- vào tháng 10.", options: ["observe", "represent", "commence", "access"], a: "C" },
+                    { id: 129, q: "After months of planning, the Lanton Bookstore school reading program finally ------- in October.", options: ["observe", "represent", "commence", "access"], a: "C" },
                     { id: 130, q: "Independent consultants can be a valuable source of ------- advice to new entrepreneurs.", options: ["unfulfilled", "indefinite", "obedient", "impartial"], a: "D" }
                 ]
             }
