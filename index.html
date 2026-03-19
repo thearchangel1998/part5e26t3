@@ -2,71 +2,129 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TOEIC Reading Test 03 - Part 5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .question-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
-        .question-card:hover { border-left-color: #3b82f6; transform: translateX(5px); }
-        .option-label { cursor: pointer; transition: background 0.2s; }
-        .option-label:hover { background-color: #eff6ff; }
-        input[type="radio"]:checked + span { color: #2563eb; font-weight: 600; }
-        .sticky-score { position: sticky; top: 1rem; z-index: 50; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Tối ưu hóa cho việc chạm trên điện thoại */
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            margin-bottom: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .option-label:active {
+            transform: scale(0.98);
+            background-color: #f1f5f9;
+        }
+
+        input[type="radio"]:checked + .option-content {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        .option-label.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        /* Progress Bar cố định phía trên */
+        .progress-header {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Điều chỉnh card câu hỏi cho mobile */
+        .question-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .correct-card { border: 2px solid #10b981; background-color: #f0fdf4; }
+        .incorrect-card { border: 2px solid #ef4444; background-color: #fef2f2; }
+
+        /* Nút nộp bài nổi bật */
+        .submit-container {
+            padding-bottom: calc(20px + var(--safe-area-inset-bottom));
+        }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="antialiased text-gray-900">
 
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <header class="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-100 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">TOEIC PRACTICE - TEST 03</h1>
-            <p class="text-blue-600 font-semibold">PART 5: INCOMPLETE SENTENCES</p>
-            <div class="mt-4 flex justify-center gap-4 text-sm text-gray-500">
-                <span><i class="mr-1"></i> 30 Câu hỏi</span>
-                <span><i class="mr-1"></i> Thời gian: 15-20 phút</span>
+    <!-- Thanh tiến độ cố định -->
+    <div class="progress-header px-4 py-3">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-1">
+                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider">Tiến độ làm bài</span>
+                <span class="text-xs font-bold text-gray-500" id="progressText">0/30 câu</span>
             </div>
-        </header>
-
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <!-- Main Quiz -->
-            <div class="lg:col-span-3">
-                <form id="quizForm" class="space-y-6">
-                    <!-- Questions will be injected here -->
-                    <div id="quizContainer"></div>
-                    
-                    <button type="button" onclick="submitQuiz()" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02]">
-                        Nộp bài và Xem kết quả
-                    </button>
-                </form>
-            </div>
-
-            <!-- Sidebar Score -->
-            <div class="lg:col-span-1">
-                <div class="sticky-score bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                    <h2 class="text-lg font-bold text-gray-700 mb-4">Tiến độ làm bài</h2>
-                    <div id="progressGrid" class="grid grid-cols-5 gap-2 mb-6">
-                        <!-- Progress dots -->
-                    </div>
-                    <div id="finalResult" class="hidden text-center p-4 bg-blue-50 rounded-xl">
-                        <p class="text-sm text-gray-600">Kết quả của bạn:</p>
-                        <p class="text-4xl font-bold text-blue-600 my-2" id="scoreValue">0/30</p>
-                        <button onclick="location.reload()" class="text-xs text-blue-500 underline">Làm lại bài</button>
-                    </div>
-                </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
             </div>
         </div>
     </div>
 
-    <!-- Result Modal -->
-    <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-[100]">
-        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+    <div class="max-w-2xl mx-auto px-4 pt-6 pb-20">
+        <!-- Header -->
+        <header class="mb-8">
+            <h1 class="text-2xl font-extrabold text-gray-900 leading-tight">TOEIC Practice</h1>
+            <p class="text-gray-500 font-medium">Test 03 • Part 5: Incomplete Sentences</p>
+        </header>
+
+        <form id="quizForm" class="space-y-4">
+            <div id="quizContainer">
+                <!-- Questions injected here -->
+            </div>
+            
+            <div class="submit-container mt-10">
+                <button type="button" onclick="submitQuiz()" id="submitBtn" class="w-full bg-blue-600 active:bg-blue-800 text-white font-bold py-4 rounded-2xl shadow-xl transition-all shadow-blue-200">
+                    Nộp bài và Xem kết quả
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Kết quả Overlay -->
+    <div id="resultModal" class="fixed inset-0 bg-gray-900/90 hidden z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-8 text-center animate-in slide-in-from-bottom duration-300">
             <div id="modalIcon" class="text-6xl mb-4">🏆</div>
-            <h2 class="text-2xl font-bold mb-2" id="modalTitle">Hoàn thành bài thi!</h2>
-            <p class="text-gray-600 mb-6" id="modalMessage">Bạn đã hoàn thành 30 câu hỏi của Part 5.</p>
-            <div class="text-5xl font-bold text-blue-600 mb-8" id="modalScore">25/30</div>
-            <button onclick="closeModal()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl">Xem lại chi tiết câu trả lời</button>
+            <h2 class="text-2xl font-bold mb-1" id="modalTitle">Hoàn thành!</h2>
+            <p class="text-gray-500 mb-6">Kết quả bài thi Part 5 của bạn</p>
+            
+            <div class="inline-block bg-blue-50 px-8 py-4 rounded-2xl mb-8">
+                <div class="text-5xl font-black text-blue-600" id="modalScore">0/30</div>
+                <div class="text-sm font-bold text-blue-400 mt-1 uppercase tracking-widest">Số câu đúng</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="location.reload()" class="bg-gray-100 text-gray-800 font-bold py-4 rounded-xl">Làm lại</button>
+                <button onclick="closeModal()" class="bg-blue-600 text-white font-bold py-4 rounded-xl">Xem chi tiết</button>
+            </div>
         </div>
     </div>
 
@@ -105,47 +163,48 @@
         ];
 
         const labels = ["A", "B", "C", "D"];
+        const answeredQuestions = new Set();
 
         function initQuiz() {
             const container = document.getElementById('quizContainer');
-            const progressGrid = document.getElementById('progressGrid');
-            
-            questions.forEach((q, idx) => {
-                // Render Question Card
+            questions.forEach((q) => {
                 const card = document.createElement('div');
-                card.className = "question-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-4";
+                card.className = "question-card";
                 card.id = `card-${q.id}`;
                 
                 card.innerHTML = `
-                    <div class="flex items-start gap-4 mb-4">
-                        <span class="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-lg text-sm">${q.id}</span>
-                        <p class="text-gray-800 font-medium text-lg">${q.q}</p>
+                    <div class="flex gap-3 mb-4">
+                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 font-bold rounded-lg text-sm">${q.id}</span>
+                        <p class="text-gray-800 font-semibold leading-relaxed">${q.q}</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="space-y-2">
                         ${q.options.map((opt, i) => `
-                            <label class="option-label flex items-center p-3 border border-gray-200 rounded-xl hover:border-blue-400 transition-colors" onclick="updateProgress(${q.id})">
-                                <input type="radio" name="q${q.id}" value="${labels[i]}" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-                                <span class="ml-3 text-gray-700">(${labels[i]}) ${opt}</span>
+                            <label class="option-label" onclick="handleSelect(${q.id}, this)">
+                                <input type="radio" name="q${q.id}" value="${labels[i]}" class="hidden">
+                                <span class="option-content text-gray-600">
+                                    <span class="font-bold mr-2">${labels[i]}.</span>${opt}
+                                </span>
                             </label>
                         `).join('')}
                     </div>
-                    <div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded-lg text-sm font-semibold"></div>
+                    <div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded-xl text-sm font-bold"></div>
                 `;
                 container.appendChild(card);
-
-                // Render Progress Dot
-                const dot = document.createElement('div');
-                dot.id = `dot-${q.id}`;
-                dot.className = "w-full h-8 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 text-xs font-bold transition-all";
-                dot.innerText = q.id;
-                progressGrid.appendChild(dot);
             });
         }
 
-        function updateProgress(id) {
-            const dot = document.getElementById(`dot-${id}`);
-            dot.classList.remove('bg-gray-100', 'text-gray-400');
-            dot.classList.add('bg-blue-500', 'text-white');
+        function handleSelect(id, element) {
+            // Xóa class selected cũ
+            const parent = element.parentElement;
+            parent.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+            // Thêm class mới
+            element.classList.add('selected');
+            
+            // Cập nhật tiến độ
+            answeredQuestions.add(id);
+            const percent = (answeredQuestions.size / questions.length) * 100;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').innerText = `${answeredQuestions.size}/${questions.length} câu`;
         }
 
         function submitQuiz() {
@@ -160,40 +219,28 @@
                 if (selected) {
                     if (selected.value === q.answer) {
                         score++;
-                        feedback.innerText = `Chính xác! Đáp án đúng là ${q.answer}`;
-                        feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-green-50 text-green-700";
-                        card.classList.add('border-green-500');
+                        feedback.innerHTML = `✓ Chính xác! Đáp án: ${q.answer}`;
+                        feedback.className = "mt-4 p-3 rounded-xl text-sm font-bold bg-green-100 text-green-700";
+                        card.classList.add('correct-card');
                     } else {
-                        feedback.innerText = `Sai rồi. Đáp án đúng là ${q.answer}`;
-                        feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-red-50 text-red-700";
-                        card.classList.add('border-red-500');
+                        feedback.innerHTML = `✕ Sai rồi. Đáp án đúng: ${q.answer}`;
+                        feedback.className = "mt-4 p-3 rounded-xl text-sm font-bold bg-red-100 text-red-700";
+                        card.classList.add('incorrect-card');
                     }
                 } else {
-                    feedback.innerText = `Bạn chưa chọn. Đáp án đúng là ${q.answer}`;
-                    feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-yellow-50 text-yellow-700";
+                    feedback.innerHTML = `! Chưa làm. Đáp án đúng: ${q.answer}`;
+                    feedback.className = "mt-4 p-3 rounded-xl text-sm font-bold bg-amber-100 text-amber-700";
                 }
             });
 
-            // Show Results
-            document.getElementById('finalResult').classList.remove('hidden');
-            document.getElementById('scoreValue').innerText = `${score}/30`;
-            
             // Show Modal
-            const modal = document.getElementById('resultModal');
             document.getElementById('modalScore').innerText = `${score}/30`;
-            if (score >= 25) {
-                document.getElementById('modalIcon').innerText = "🔥";
-                document.getElementById('modalTitle').innerText = "Tuyệt vời!";
-            } else if (score >= 15) {
-                document.getElementById('modalIcon').innerText = "👍";
-                document.getElementById('modalTitle').innerText = "Khá tốt!";
-            } else {
-                document.getElementById('modalIcon').innerText = "📚";
-                document.getElementById('modalTitle').innerText = "Cần cố gắng thêm!";
-            }
+            const modal = document.getElementById('resultModal');
             modal.classList.remove('hidden');
+            
+            // Disable interactions
             document.getElementById('submitBtn').disabled = true;
-            document.getElementById('submitBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('submitBtn').classList.add('opacity-50');
         }
 
         function closeModal() {
