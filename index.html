@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Reading Test 03 - Part 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .question-card { transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .question-card:hover { border-left-color: #3b82f6; transform: translateX(5px); }
+        .option-label { cursor: pointer; transition: background 0.2s; }
+        .option-label:hover { background-color: #eff6ff; }
+        input[type="radio"]:checked + span { color: #2563eb; font-weight: 600; }
+        .sticky-score { position: sticky; top: 1rem; z-index: 50; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-gray-100 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">TOEIC PRACTICE - TEST 03</h1>
+            <p class="text-blue-600 font-semibold">PART 5: INCOMPLETE SENTENCES</p>
+            <div class="mt-4 flex justify-center gap-4 text-sm text-gray-500">
+                <span><i class="mr-1"></i> 30 Câu hỏi</span>
+                <span><i class="mr-1"></i> Thời gian: 15-20 phút</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Main Quiz -->
+            <div class="lg:col-span-3">
+                <form id="quizForm" class="space-y-6">
+                    <!-- Questions will be injected here -->
+                    <div id="quizContainer"></div>
+                    
+                    <button type="button" onclick="submitQuiz()" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02]">
+                        Nộp bài và Xem kết quả
+                    </button>
+                </form>
+            </div>
+
+            <!-- Sidebar Score -->
+            <div class="lg:col-span-1">
+                <div class="sticky-score bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-bold text-gray-700 mb-4">Tiến độ làm bài</h2>
+                    <div id="progressGrid" class="grid grid-cols-5 gap-2 mb-6">
+                        <!-- Progress dots -->
+                    </div>
+                    <div id="finalResult" class="hidden text-center p-4 bg-blue-50 rounded-xl">
+                        <p class="text-sm text-gray-600">Kết quả của bạn:</p>
+                        <p class="text-4xl font-bold text-blue-600 my-2" id="scoreValue">0/30</p>
+                        <button onclick="location.reload()" class="text-xs text-blue-500 underline">Làm lại bài</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-[100]">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+            <div id="modalIcon" class="text-6xl mb-4">🏆</div>
+            <h2 class="text-2xl font-bold mb-2" id="modalTitle">Hoàn thành bài thi!</h2>
+            <p class="text-gray-600 mb-6" id="modalMessage">Bạn đã hoàn thành 30 câu hỏi của Part 5.</p>
+            <div class="text-5xl font-bold text-blue-600 mb-8" id="modalScore">25/30</div>
+            <button onclick="closeModal()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl">Xem lại chi tiết câu trả lời</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { id: 101, q: "Despite ------ youth, Ms. Cho is already quite popular on social media.", options: ["she", "her", "hers", "herself"], answer: "B" },
+            { id: 102, q: "Most of the materials distributed at last month's accounting conference are now ------- online.", options: ["available", "intended", "comparable", "decisive"], answer: "A" },
+            { id: 103, q: "A full-scale ------ will be conducted by the accounting department.", options: ["reviewer", "review", "reviewed", "reviews"], answer: "B" },
+            { id: 104, q: "Poshy Shoes vice president Lucille Jeris has been ------- to president of the company.", options: ["provided", "decorated", "promoted", "responded"], answer: "C" },
+            { id: 105, q: "The report found that employees who take regular breaks are more ------- than those who take no breaks.", options: ["production", "productively", "productivity", "productive"], answer: "D" },
+            { id: 106, q: "Customers of Twins Photocopiers are encouraged to contact a ------- if their machines need repairs.", options: ["replacement", "technician", "renewal", "structure"], answer: "B" },
+            { id: 107, q: "The heavy traffic on the way to the airport caused Ms. Ikeda to ------- miss her flight.", options: ["nearly", "near", "nears", "nearness"], answer: "A" },
+            { id: 108, q: "A news source suggested that the merger will ------- take place next year.", options: ["originally", "probably", "regularly", "thoughtfully"], answer: "B" },
+            { id: 109, q: "The Seaborne Inn has ------- beautiful guest rooms that can be booked on a monthly basis.", options: ["various", "among", "throughout", "itself"], answer: "A" },
+            { id: 110, q: "Ahearn Accessories' retail shop is located ------- Gordon Avenue and Hutch Street.", options: ["until", "against", "at", "aside from"], answer: "C" },
+            { id: 111, q: "A majority of the city's residents rated its transportation app as -------.", options: ["acceptability", "acceptable", "acceptance", "accepting"], answer: "B" },
+            { id: 112, q: "Dr. Cheung ------- Silk Valley Hospital at next weekend's medical fair.", options: ["represent", "did represent", "is representing", "had represented"], answer: "C" },
+            { id: 113, q: "Frankie's Boutique had a financially ------- quarter after taking measures to reduce costs.", options: ["plain", "profitable", "full", "additional"], answer: "B" },
+            { id: 114, q: "Because it submitted the lowest bid, Deb's Gifting has been chosen as the ------- of this year's holiday cards.", options: ["supply", "supplier", "supplies", "supplying"], answer: "B" },
+            { id: 115, q: "The Whitetail Institute is the only ------- tracks deer populations in rapidly expanding suburban areas.", options: ["leadership", "neighborhood", "official", "organization"], answer: "D" },
+            { id: 116, q: "The committee members ------- attended the meeting are listed in the appendix.", options: ["who", "they", "when", "some"], answer: "A" },
+            { id: 117, q: "Our new app is designed to provide ------- data-driven insights to investment professionals.", options: ["specify", "specific", "specificity", "specifically"], answer: "B" },
+            { id: 118, q: "The results of the study suggest that more people ------- with night driving than previously believed.", options: ["struggles", "struggling", "to struggle", "struggle"], answer: "D" },
+            { id: 119, q: "Each department has been asked to develop an action plan in ------- to the budget cuts announced last week.", options: ["response", "effect", "apology", "confirmation"], answer: "A" },
+            { id: 120, q: "Our popular online training materials have been shown to improve job seekers' skills -------.", options: ["consistently", "emotionally", "spaciously", "randomly"], answer: "A" },
+            { id: 121, q: "Ms. Yamada, ------- director of the Midlands Chamber of Commerce, was recently appointed to the state trade commission.", options: ["formed", "former", "formalize", "formality"], answer: "B" },
+            { id: 122, q: "The software uses computer memory efficiently, allowing users to open ------- five files simultaneously.", options: ["far from", "as for", "up to", "out of"], answer: "C" },
+            { id: 123, q: "A monthly newsletter is an excellent way to ------- your group's activities and events.", options: ["realize", "propose", "observe", "promote"], answer: "D" },
+            { id: 124, q: "------- the hotel does not have a restaurant on site, there are many dining options nearby.", options: ["While", "Such as", "Unless", "Without"], answer: "A" },
+            { id: 125, q: "------- a slight decline in revenue from the previous quarter, Blakely Components is moving forward with its expansion plan.", options: ["Aside", "Despite", "Becoming", "Often"], answer: "B" },
+            { id: 126, q: "Abelia Dairy Company has undergone several changes in leadership ------- the past ten years.", options: ["over", "into", "since", "beside"], answer: "A" },
+            { id: 127, q: "Opal City's Community Theater is holding ------- for its spring production during the first week of December.", options: ["to audition", "auditioned", "auditions", "audition"], answer: "C" },
+            { id: 128, q: "Mr. Kane said he packed so ------- this morning that he forgot to bring a suit and tie for tomorrow's dinner.", options: ["enormously", "briefly", "hastily", "mysteriously"], answer: "C" },
+            { id: 129, q: "Long before the training program began, Ms. Morris ------- the schedule to allow her team to attend.", options: ["was revised", "is revising", "had revised", "has to revise"], answer: "C" },
+            { id: 130, q: "Mr. Swan will return to the planning meeting ------- the interns have arrived.", options: ["once", "unlike", "whereas", "regarding"], answer: "A" }
+        ];
+
+        const labels = ["A", "B", "C", "D"];
+
+        function initQuiz() {
+            const container = document.getElementById('quizContainer');
+            const progressGrid = document.getElementById('progressGrid');
+            
+            questions.forEach((q, idx) => {
+                // Render Question Card
+                const card = document.createElement('div');
+                card.className = "question-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-4";
+                card.id = `card-${q.id}`;
+                
+                card.innerHTML = `
+                    <div class="flex items-start gap-4 mb-4">
+                        <span class="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-lg text-sm">${q.id}</span>
+                        <p class="text-gray-800 font-medium text-lg">${q.q}</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${q.options.map((opt, i) => `
+                            <label class="option-label flex items-center p-3 border border-gray-200 rounded-xl hover:border-blue-400 transition-colors" onclick="updateProgress(${q.id})">
+                                <input type="radio" name="q${q.id}" value="${labels[i]}" class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-3 text-gray-700">(${labels[i]}) ${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="feedback-${q.id}" class="mt-4 hidden p-3 rounded-lg text-sm font-semibold"></div>
+                `;
+                container.appendChild(card);
+
+                // Render Progress Dot
+                const dot = document.createElement('div');
+                dot.id = `dot-${q.id}`;
+                dot.className = "w-full h-8 flex items-center justify-center rounded-md bg-gray-100 text-gray-400 text-xs font-bold transition-all";
+                dot.innerText = q.id;
+                progressGrid.appendChild(dot);
+            });
+        }
+
+        function updateProgress(id) {
+            const dot = document.getElementById(`dot-${id}`);
+            dot.classList.remove('bg-gray-100', 'text-gray-400');
+            dot.classList.add('bg-blue-500', 'text-white');
+        }
+
+        function submitQuiz() {
+            let score = 0;
+            questions.forEach(q => {
+                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+                const feedback = document.getElementById(`feedback-${q.id}`);
+                const card = document.getElementById(`card-${q.id}`);
+                
+                feedback.classList.remove('hidden');
+                
+                if (selected) {
+                    if (selected.value === q.answer) {
+                        score++;
+                        feedback.innerText = `Chính xác! Đáp án đúng là ${q.answer}`;
+                        feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-green-50 text-green-700";
+                        card.classList.add('border-green-500');
+                    } else {
+                        feedback.innerText = `Sai rồi. Đáp án đúng là ${q.answer}`;
+                        feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-red-50 text-red-700";
+                        card.classList.add('border-red-500');
+                    }
+                } else {
+                    feedback.innerText = `Bạn chưa chọn. Đáp án đúng là ${q.answer}`;
+                    feedback.className = "mt-4 p-3 rounded-lg text-sm font-semibold bg-yellow-50 text-yellow-700";
+                }
+            });
+
+            // Show Results
+            document.getElementById('finalResult').classList.remove('hidden');
+            document.getElementById('scoreValue').innerText = `${score}/30`;
+            
+            // Show Modal
+            const modal = document.getElementById('resultModal');
+            document.getElementById('modalScore').innerText = `${score}/30`;
+            if (score >= 25) {
+                document.getElementById('modalIcon').innerText = "🔥";
+                document.getElementById('modalTitle').innerText = "Tuyệt vời!";
+            } else if (score >= 15) {
+                document.getElementById('modalIcon').innerText = "👍";
+                document.getElementById('modalTitle').innerText = "Khá tốt!";
+            } else {
+                document.getElementById('modalIcon').innerText = "📚";
+                document.getElementById('modalTitle').innerText = "Cần cố gắng thêm!";
+            }
+            modal.classList.remove('hidden');
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        function closeModal() {
+            document.getElementById('resultModal').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onload = initQuiz;
+    </script>
+</body>
+</html>
