@@ -276,7 +276,255 @@
                 ]
             }
         };
+// --- 1. BIẾN TOÀN CỤC & TRẠNG THÁI ---
+        let currentTestKey = 'test3'; // Sửa lại thành test3 làm mặc định vì test5 ở cuối
+        const userAnswers = {};
+        const testHistory = JSON.parse(localStorage.getItem('toeic_history')) || {};
+        
+        // Khởi tạo trạng thái người dùng
+        const appState = JSON.parse(localStorage.getItem('toeic_user_profile')) || {
+            name: '',
+            target: ''
+        };
 
+        // --- 2. KHỞI TẠO ỨNG DỤNG ---
+        function initApp() {
+            // Kiểm tra xem học viên đã khai báo tên chưa
+            if (!appState.name) {
+                document.getElementById('welcome-overlay').style.display = 'flex';
+            } else {
+                document.getElementById('welcome-overlay').style.display = 'none';
+                updateWelcomeBanner();
+            }
+
+            renderTabs();
+            loadTest(currentTestKey);
+            updateDashboard();
+        }
+
+        // --- 3. XỬ LÝ MÀN HÌNH CHÀO MỪNG (BẮT BUỘC NHẬP TÊN) ---
+        function saveUserProfile() {
+            const nameInput = document.getElementById('user-name').value.trim();
+            const targetInput = document.getElementById('user-target').value;
+            
+            // Validate: Bắt buộc phải có dữ liệu
+            if (!nameInput) {
+                alert("⚠️ Vui lòng nhập Họ và Tên của bạn để bắt đầu!");
+                document.getElementById('user-name').focus();
+                return;
+            }
+
+            // Lưu dữ liệu vào biến và LocalStorage
+            appState.name = nameInput;
+            appState.target = targetInput;
+            localStorage.setItem('toeic_user_profile', JSON.stringify(appState));
+            
+            // Ẩn màn hình chào mừng
+            document.getElementById('welcome-overlay').style.display = 'none';
+            updateWelcomeBanner();
+        }
+
+        function updateWelcomeBanner() {
+            const banner = document.getElementById('user-welcome-banner');
+            if(banner) {
+                banner.innerHTML = `<h3>Xin chào, ${appState.name}!</h3><div>Mục tiêu TOEIC: <strong>${appState.target}</strong></div>`;
+            }
+        }
+
+        // --- 4. CÁC HÀM RENDER & LOGIC BÀI TEST (GIỮ NGUYÊN TỪ BẢN GỐC) ---
+        function renderTabs() {
+            const menu = document.getElementById('quizTabMenu');
+            menu.innerHTML = '';
+            Object.keys(allTests).forEach(key => {
+                const tab = document.createElement('button');
+                tab.className = `test-tab px-6 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 whitespace-nowrap ${key === currentTestKey ? 'active' : ''}`;
+                tab.innerText = allTests[key].title;
+                tab.onclick = () => switchTest(key);
+                menu.appendChild(tab);
+            });
+        }
+
+        function switchTest(key) {
+            currentTestKey = key;
+            renderTabs();
+            loadTest(key);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function loadTest(key) {
+            const test = allTests[key];
+            document.getElementById('currentTestTitle').innerText = test.title;
+            document.getElementById('currentTestDesc').innerText = test.desc;
+            
+            const list = document.getElementById('questionsList');
+            list.innerHTML = '';
+            userAnswers[key] = {};
+            updateProgressBar();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            test.questions.forEach(q => {
+                const card = document.createElement('div');
+                card.className = "question-card bg-white p-6 rounded-3xl shadow-sm border border-slate-100";
+                card.id = `q-card-${q.id}`;
+                card.innerHTML = `
+                    <div class="flex gap-3 mb-4">
+                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 font-bold rounded-xl text-xs">${q.id}</span>
+                        <p class="text-slate-800 font-bold leading-relaxed">${q.q}</p>
+                    </div>
+                    <div class="space-y-3" id="options-${q.id}">
+                        ${['A', 'B', 'C', 'D'].map((label, i) => `
+                            <div class="option-card" onclick="selectOption('${key}', ${q.id}, '${label}', this)">
+                                <div class="w-6 h-6 rounded-full border-2 border-slate-300 mr-3 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                                    ${label}
+                                </div>
+                                <span class="text-slate-600 font-medium">${q.options[i]}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function selectOption(testKey, qId, label, element) {
+            const parent = document.getElementById(`options-${qId}`);
+            parent.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            userAnswers[testKey][qId] = label;
+            updateProgressBar();
+        }
+
+        function updateProgressBar() {
+            const total = allTests[currentTestKey].questions.length;
+            const answered = Object.keys(userAnswers[currentTestKey] || {}).length;
+            document.getElementById('progressBar').style.width = (answered / total * 100) + '%';
+        }
+
+        // --- 5. NỘP BÀI VÀ ĐẨY LÊN GOOGLE SHEET ---
+        function submitTest() {
+            const test = allTests[currentTestKey];
+            let score = 0;
+            
+            // Chấm điểm
+            test.questions.forEach(q => {
+                const ans = userAnswers[currentTestKey][q.id];
+                const options = document.getElementById(`options-${q.id}`).querySelectorAll('.option-card');
+                options.forEach((opt, i) => {
+                    const label = ['A', 'B', 'C', 'D'][i];
+                    opt.style.pointerEvents = 'none';
+                    if (label === q.a) opt.classList.add('correct');
+                    else if (label === ans) opt.classList.add('incorrect');
+                });
+                if (ans === q.a) score++;
+            });
+
+            // Lưu lịch sử local
+            const bestScore = testHistory[currentTestKey]?.score || 0;
+            testHistory[currentTestKey] = {
+                title: test.title,
+                score: Math.max(score, bestScore),
+                total: test.questions.length,
+                date: new Date().toLocaleDateString('vi-VN')
+            };
+            localStorage.setItem('toeic_history', JSON.stringify(testHistory));
+            updateDashboard();
+
+            // Hiển thị modal
+            document.getElementById('finalScore').innerText = score;
+            const feedback = score >= 25 ? "Tuyệt vời! Bạn đã sẵn sàng đi thi." : (score >= 15 ? "Khá tốt! Hãy luyện thêm các câu sai." : "Bạn cần cố gắng nhiều hơn.");
+            document.getElementById('feedbackText').innerText = feedback;
+            document.getElementById('resultEmoji').innerText = score >= 25 ? "🏆" : "📈";
+            document.getElementById('resultModal').classList.remove('hidden');
+
+            // ===== ĐẨY DỮ LIỆU LÊN GOOGLE SHEET =====
+           // CẬP NHẬT PAYLOAD CÓ THÊM TÊN BÀI TEST:
+    const payload = {
+        userName: appState.name, 
+        testTitle: test.title, // Tự động lấy tên đề (VD: "Test 03")
+        score: `${score}/${test.questions.length}`
+    };
+
+    // Dán URL Web App của bạn vào đây
+    const webAppUrl = "URL_WEB_APP_CỦA_BẠN";
+
+    fetch(webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        body: JSON.stringify(payload)
+    })
+    .then(() => console.log("Gửi điểm thành công!"))
+    .catch(err => console.error("Lỗi:", err));
+        }
+
+        // --- 6. DASHBOARD & TIỆN ÍCH ---
+        function updateDashboard() {
+            const historyKeys = Object.keys(testHistory);
+            document.getElementById('statsCompleted').innerText = historyKeys.length;
+            
+            let totalCorrect = 0;
+            let totalQ = 0;
+            historyKeys.forEach(k => {
+                totalCorrect += testHistory[k].score;
+                totalQ += testHistory[k].total;
+            });
+            const avg = totalQ > 0 ? Math.round(totalCorrect / totalQ * 100) : 0;
+            document.getElementById('statsAvg').innerText = avg + '%';
+
+            const list = document.getElementById('dashboardList');
+            list.innerHTML = '';
+            
+            if (historyKeys.length === 0) {
+                list.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">Chưa có dữ liệu bài thi. Hãy bắt đầu ngay!</div>`;
+                return;
+            }
+
+            historyKeys.sort((a,b) => b.localeCompare(a)).forEach(key => {
+                const data = testHistory[key];
+                const percent = Math.round(data.score / data.total * 100);
+                list.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
+                        <div>
+                            <p class="font-bold text-slate-800">${data.title}</p>
+                            <p class="text-[10px] text-slate-400">Hoàn thành: ${data.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-black ${percent >= 80 ? 'text-green-600' : 'text-blue-600'}">${data.score}/${data.total}</p>
+                            <div class="w-16 h-1.5 bg-slate-100 rounded-full mt-1">
+                                <div class="h-full rounded-full ${percent >= 80 ? 'bg-green-500' : 'bg-blue-500'}" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showView(view) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            if (view === 'quiz') {
+                document.getElementById('quizView').classList.add('active');
+                document.getElementById('nav-quiz').classList.add('active');
+                document.getElementById('quizTabMenu').classList.remove('hidden');
+                document.getElementById('quizProgress').classList.remove('hidden');
+                document.getElementById('viewSubtitle').innerText = "Luyện thi Part 5";
+            } else {
+                document.getElementById('dashboardView').classList.add('active');
+                document.getElementById('nav-dashboard').classList.add('active');
+                document.getElementById('quizTabMenu').classList.add('hidden');
+                document.getElementById('quizProgress').classList.add('hidden');
+                document.getElementById('viewSubtitle').innerText = "Thành tích của bạn";
+            }
+        }
+
+        function resetCurrentTest() { loadTest(currentTestKey); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
+
+        window.onload = initApp;
         let currentTestKey = 'test5';
         const userAnswers = {};
         const testHistory = JSON.parse(localStorage.getItem('toeic_history')) || {};
@@ -391,7 +639,23 @@
             document.getElementById('feedbackText').innerText = feedback;
             document.getElementById('resultEmoji').innerText = score >= 25 ? "🏆" : "📈";
             document.getElementById('resultModal').classList.remove('hidden');
-        }
+        // ĐOẠN MÃ GỬI DỮ LIỆU ĐÃ CHỈNH SỬA:
+    const payload = {
+        userName: appState.name, // Lấy từ thông tin học viên nhập lúc đầu
+        score: `${score}/${test.questions.length}` // Ví dụ: "25/30"
+    };
+
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbzLsqeH-fyUJ8M7pd-zSlKKjMMLo9UYqvAStk2ryb6qLV-EVoXT4YxfhaIFD6_EkK4/exec";
+
+    fetch(webAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        cache: 'no-cache',
+        body: JSON.stringify(payload)
+    })
+    .then(() => console.log("Ghi điểm thành công!"))
+    .catch(err => console.error("Lỗi:", err));
+}}
 
         function updateDashboard() {
             const historyKeys = Object.keys(testHistory);
