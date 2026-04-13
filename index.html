@@ -73,7 +73,6 @@
 </head>
 <body class="antialiased">
 
-    <!-- App Header -->
     <div class="sticky-nav border-b bg-white/90 backdrop-blur-md">
         <div class="px-4 pt-4 pb-2 flex justify-between items-center">
             <div>
@@ -85,20 +84,27 @@
             </div>
         </div>
         
-        <!-- Tab menu cho Quiz View -->
         <div id="quizTabMenu" class="flex overflow-x-auto gap-3 px-4 pb-4 hide-scrollbar">
-            <!-- Render tabs here -->
-        </div>
+            </div>
 
         <div id="quizProgress" class="h-1 w-full bg-slate-100">
             <div id="progressBar" class="h-full bg-blue-600 transition-all duration-500 w-0"></div>
         </div>
     </div>
 
-    <!-- MAIN VIEWS -->
+    <div id="welcome-overlay">
+        <div class="welcome-card">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">🚀 TOEIC Master</h2>
+            <p class="text-slate-500 mb-6 text-sm">Vui lòng nhập Họ Tên để bắt đầu</p>
+            <input type="text" id="user-name" class="form-control" placeholder="Nhập họ và tên của bạn...">
+            <select id="user-target" class="form-control hidden"> <option value="B2" selected>Mục tiêu: B2</option>
+            </select>
+            <button class="btn-start shadow-lg shadow-blue-200" onclick="saveUserProfile()">BẮT ĐẦU</button>
+        </div>
+    </div>
+
     <main class="max-w-xl mx-auto px-4 py-6">
         
-        <!-- SECTION 1: QUIZ VIEW -->
         <section id="quizView" class="view-section active">
             <div id="quizHeader" class="mb-6">
                 <h2 id="currentTestTitle" class="text-2xl font-bold text-slate-800">Sẵn sàng?</h2>
@@ -111,11 +117,11 @@
             </div>
         </section>
 
-        <!-- SECTION 2: DASHBOARD VIEW -->
         <section id="dashboardView" class="view-section">
+            <div id="user-welcome-banner" class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-3xl mb-8 shadow-lg"></div>
+            
             <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center md:text-left">Tiến trình học tập</h2>
             
-            <!-- Thống kê tổng quát -->
             <div class="grid grid-cols-2 gap-4 mb-8">
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
                     <p class="text-slate-400 text-[10px] font-bold uppercase mb-1">Đã hoàn thành</p>
@@ -131,12 +137,14 @@
 
             <h3 class="text-lg font-bold text-slate-800 mb-4">Chi tiết thành tích</h3>
             <div id="dashboardList" class="space-y-3">
-                <!-- Danh sách bài test sẽ render ở đây -->
+                </div>
+
+            <div class="mt-8 text-center">
+                <button class="text-red-500 font-bold text-sm bg-red-50 px-4 py-2 rounded-lg" onclick="resetAllData()">⚠️ Xóa dữ liệu học tập</button>
             </div>
         </section>
     </main>
 
-    <!-- BOTTOM NAVIGATION -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50 max-w-xl mx-auto shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <button onclick="showView('quiz')" id="nav-quiz" class="nav-item active flex flex-col items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
@@ -148,24 +156,24 @@
         </button>
     </nav>
 
-    <!-- Modal Kết quả -->
     <div id="resultModal" class="fixed inset-0 bg-slate-900/80 hidden z-[100] flex items-center justify-center p-6">
-        <div class="bg-white w-full rounded-3xl p-8 text-center shadow-2xl animate-in zoom-in duration-300">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-8 text-center shadow-2xl animate-in zoom-in duration-300">
             <div class="text-6xl mb-4" id="resultEmoji">📈</div>
             <h3 class="text-2xl font-black text-slate-900">Kết quả bài thi</h3>
             <div class="my-6">
                 <span class="text-6xl font-black text-blue-600" id="finalScore">0</span>
-                <span class="text-2xl font-bold text-slate-400">/30</span>
+                <span class="text-2xl font-bold text-slate-400" id="totalQuestionsModal">/30</span>
             </div>
             <p id="feedbackText" class="text-slate-500 mb-8 font-medium"></p>
             <div class="flex flex-col gap-2">
                 <button onclick="closeModal()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl">Xem chi tiết đáp án</button>
-                <button onclick="showView('dashboard'); closeModal();" class="w-full text-blue-600 font-bold py-2">Xem bảng điểm</button>
+                <button onclick="showView('dashboard'); closeModal();" class="w-full text-blue-600 font-bold py-2 mt-2">Xem bảng điểm</button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- 1. DỮ LIỆU ĐỀ THI ---
         const allTests = {
             'test3': {
                 title: 'Test 03',
@@ -276,50 +284,40 @@
                 ]
             }
         };
-// --- 1. BIẾN TOÀN CỤC & TRẠNG THÁI ---
-        let currentTestKey = 'test3'; // Sửa lại thành test3 làm mặc định vì test5 ở cuối
+
+        // --- 2. BIẾN TOÀN CỤC & TRẠNG THÁI ---
+        let currentTestKey = 'test3';
         const userAnswers = {};
-        const testHistory = JSON.parse(localStorage.getItem('toeic_history')) || {};
+        const testHistory = JSON.parse(localStorage.getItem('toeic_history_v2')) || {};
         
-        // Khởi tạo trạng thái người dùng
-        const appState = JSON.parse(localStorage.getItem('toeic_user_profile')) || {
-            name: '',
-            target: ''
+        const appState = JSON.parse(localStorage.getItem('toeic_user_profile_v2')) || {
+            name: ''
         };
 
-        // --- 2. KHỞI TẠO ỨNG DỤNG ---
+        // --- 3. KHỞI TẠO ỨNG DỤNG ---
         function initApp() {
-            // Kiểm tra xem học viên đã khai báo tên chưa
             if (!appState.name) {
                 document.getElementById('welcome-overlay').style.display = 'flex';
             } else {
                 document.getElementById('welcome-overlay').style.display = 'none';
                 updateWelcomeBanner();
             }
-
             renderTabs();
             loadTest(currentTestKey);
             updateDashboard();
         }
 
-        // --- 3. XỬ LÝ MÀN HÌNH CHÀO MỪNG (BẮT BUỘC NHẬP TÊN) ---
+        // --- 4. XỬ LÝ MÀN HÌNH CHÀO MỪNG (BẮT BUỘC NHẬP TÊN) ---
         function saveUserProfile() {
             const nameInput = document.getElementById('user-name').value.trim();
-            const targetInput = document.getElementById('user-target').value;
-            
-            // Validate: Bắt buộc phải có dữ liệu
             if (!nameInput) {
                 alert("⚠️ Vui lòng nhập Họ và Tên của bạn để bắt đầu!");
                 document.getElementById('user-name').focus();
                 return;
             }
-
-            // Lưu dữ liệu vào biến và LocalStorage
             appState.name = nameInput;
-            appState.target = targetInput;
-            localStorage.setItem('toeic_user_profile', JSON.stringify(appState));
+            localStorage.setItem('toeic_user_profile_v2', JSON.stringify(appState));
             
-            // Ẩn màn hình chào mừng
             document.getElementById('welcome-overlay').style.display = 'none';
             updateWelcomeBanner();
         }
@@ -327,11 +325,11 @@
         function updateWelcomeBanner() {
             const banner = document.getElementById('user-welcome-banner');
             if(banner) {
-                banner.innerHTML = `<h3>Xin chào, ${appState.name}!</h3><div>Mục tiêu TOEIC: <strong>${appState.target}</strong></div>`;
+                banner.innerHTML = `<h3 class="text-xl font-bold">Xin chào, ${appState.name}!</h3><p class="opacity-80 text-sm mt-1">Chúc bạn làm bài thi TOEIC thật tốt.</p>`;
             }
         }
 
-        // --- 4. CÁC HÀM RENDER & LOGIC BÀI TEST (GIỮ NGUYÊN TỪ BẢN GỐC) ---
+        // --- 5. LOGIC RENDER & LÀM BÀI ---
         function renderTabs() {
             const menu = document.getElementById('quizTabMenu');
             menu.innerHTML = '';
@@ -403,18 +401,18 @@
             document.getElementById('progressBar').style.width = (answered / total * 100) + '%';
         }
 
-        // --- 5. NỘP BÀI VÀ ĐẨY LÊN GOOGLE SHEET ---
+        // --- 6. CHẤM ĐIỂM & GỬI LÊN GOOGLE SHEET ---
         function submitTest() {
             const test = allTests[currentTestKey];
             let score = 0;
             
-            // Chấm điểm
+            // Chấm điểm & Hiển thị màu Đúng/Sai
             test.questions.forEach(q => {
                 const ans = userAnswers[currentTestKey][q.id];
                 const options = document.getElementById(`options-${q.id}`).querySelectorAll('.option-card');
                 options.forEach((opt, i) => {
                     const label = ['A', 'B', 'C', 'D'][i];
-                    opt.style.pointerEvents = 'none';
+                    opt.style.pointerEvents = 'none'; // Khóa không cho bấm tiếp
                     if (label === q.a) opt.classList.add('correct');
                     else if (label === ans) opt.classList.add('incorrect');
                 });
@@ -429,234 +427,39 @@
                 total: test.questions.length,
                 date: new Date().toLocaleDateString('vi-VN')
             };
-            localStorage.setItem('toeic_history', JSON.stringify(testHistory));
+            localStorage.setItem('toeic_history_v2', JSON.stringify(testHistory));
             updateDashboard();
 
-            // Hiển thị modal
+            // Hiển thị Modal điểm
             document.getElementById('finalScore').innerText = score;
-            const feedback = score >= 25 ? "Tuyệt vời! Bạn đã sẵn sàng đi thi." : (score >= 15 ? "Khá tốt! Hãy luyện thêm các câu sai." : "Bạn cần cố gắng nhiều hơn.");
+            document.getElementById('totalQuestionsModal').innerText = `/${test.questions.length}`;
+            const percent = score / test.questions.length;
+            const feedback = percent >= 0.8 ? "Tuyệt vời! Bạn rất giỏi Part 5." : (percent >= 0.5 ? "Khá tốt! Hãy xem lại các câu sai." : "Hãy ôn tập nhiều hơn nhé.");
             document.getElementById('feedbackText').innerText = feedback;
-            document.getElementById('resultEmoji').innerText = score >= 25 ? "🏆" : "📈";
+            document.getElementById('resultEmoji').innerText = percent >= 0.8 ? "🏆" : "📈";
             document.getElementById('resultModal').classList.remove('hidden');
 
             // ===== ĐẨY DỮ LIỆU LÊN GOOGLE SHEET =====
-           // CẬP NHẬT PAYLOAD CÓ THÊM TÊN BÀI TEST:
-    const payload = {
-        userName: appState.name, 
-        testTitle: test.title, // Tự động lấy tên đề (VD: "Test 03")
-        score: `${score}/${test.questions.length}`
-    };
-
-    // Dán URL Web App của bạn vào đây
-    const webAppUrl = "URL_WEB_APP_CỦA_BẠN";
-
-    fetch(webAppUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        body: JSON.stringify(payload)
-    })
-    .then(() => console.log("Gửi điểm thành công!"))
-    .catch(err => console.error("Lỗi:", err));
-        }
-
-        // --- 6. DASHBOARD & TIỆN ÍCH ---
-        function updateDashboard() {
-            const historyKeys = Object.keys(testHistory);
-            document.getElementById('statsCompleted').innerText = historyKeys.length;
-            
-            let totalCorrect = 0;
-            let totalQ = 0;
-            historyKeys.forEach(k => {
-                totalCorrect += testHistory[k].score;
-                totalQ += testHistory[k].total;
-            });
-            const avg = totalQ > 0 ? Math.round(totalCorrect / totalQ * 100) : 0;
-            document.getElementById('statsAvg').innerText = avg + '%';
-
-            const list = document.getElementById('dashboardList');
-            list.innerHTML = '';
-            
-            if (historyKeys.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">Chưa có dữ liệu bài thi. Hãy bắt đầu ngay!</div>`;
-                return;
-            }
-
-            historyKeys.sort((a,b) => b.localeCompare(a)).forEach(key => {
-                const data = testHistory[key];
-                const percent = Math.round(data.score / data.total * 100);
-                list.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm">
-                        <div>
-                            <p class="font-bold text-slate-800">${data.title}</p>
-                            <p class="text-[10px] text-slate-400">Hoàn thành: ${data.date}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-lg font-black ${percent >= 80 ? 'text-green-600' : 'text-blue-600'}">${data.score}/${data.total}</p>
-                            <div class="w-16 h-1.5 bg-slate-100 rounded-full mt-1">
-                                <div class="h-full rounded-full ${percent >= 80 ? 'bg-green-500' : 'bg-blue-500'}" style="width: ${percent}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function showView(view) {
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            
-            if (view === 'quiz') {
-                document.getElementById('quizView').classList.add('active');
-                document.getElementById('nav-quiz').classList.add('active');
-                document.getElementById('quizTabMenu').classList.remove('hidden');
-                document.getElementById('quizProgress').classList.remove('hidden');
-                document.getElementById('viewSubtitle').innerText = "Luyện thi Part 5";
-            } else {
-                document.getElementById('dashboardView').classList.add('active');
-                document.getElementById('nav-dashboard').classList.add('active');
-                document.getElementById('quizTabMenu').classList.add('hidden');
-                document.getElementById('quizProgress').classList.add('hidden');
-                document.getElementById('viewSubtitle').innerText = "Thành tích của bạn";
-            }
-        }
-
-        function resetCurrentTest() { loadTest(currentTestKey); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
-
-        window.onload = initApp;
-        let currentTestKey = 'test5';
-        const userAnswers = {};
-        const testHistory = JSON.parse(localStorage.getItem('toeic_history')) || {};
-
-        function initApp() {
-            renderTabs();
-            loadTest(currentTestKey);
-            updateDashboard();
-        }
-
-        function renderTabs() {
-            const menu = document.getElementById('quizTabMenu');
-            menu.innerHTML = '';
-            Object.keys(allTests).forEach(key => {
-                const tab = document.createElement('button');
-                tab.className = `test-tab px-6 py-2 rounded-full text-sm font-bold bg-white text-slate-500 border border-slate-200 whitespace-nowrap ${key === currentTestKey ? 'active' : ''}`;
-                tab.innerText = allTests[key].title;
-                tab.onclick = () => switchTest(key);
-                menu.appendChild(tab);
-            });
-        }
-
-        function switchTest(key) {
-            currentTestKey = key;
-            renderTabs();
-            loadTest(key);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function loadTest(key) {
-            const test = allTests[key];
-            document.getElementById('currentTestTitle').innerText = test.title;
-            document.getElementById('currentTestDesc').innerText = test.desc;
-            
-            const list = document.getElementById('questionsList');
-            list.innerHTML = '';
-            userAnswers[key] = {};
-            updateProgressBar();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-
-            test.questions.forEach(q => {
-                const card = document.createElement('div');
-                card.className = "question-card bg-white p-6 rounded-3xl shadow-sm border border-slate-100";
-                card.id = `q-card-${q.id}`;
-                card.innerHTML = `
-                    <div class="flex gap-3 mb-4">
-                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-100 text-blue-700 font-bold rounded-xl text-xs">${q.id}</span>
-                        <p class="text-slate-800 font-bold leading-relaxed">${q.q}</p>
-                    </div>
-                    <div class="space-y-3" id="options-${q.id}">
-                        ${['A', 'B', 'C', 'D'].map((label, i) => `
-                            <div class="option-card" onclick="selectOption('${key}', ${q.id}, '${label}', this)">
-                                <div class="w-6 h-6 rounded-full border-2 border-slate-300 mr-3 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                    ${label}
-                                </div>
-                                <span class="text-slate-600 font-medium">${q.options[i]}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                list.appendChild(card);
-            });
-        }
-
-        function selectOption(testKey, qId, label, element) {
-            const parent = document.getElementById(`options-${qId}`);
-            parent.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
-            element.classList.add('selected');
-            userAnswers[testKey][qId] = label;
-            updateProgressBar();
-        }
-
-        function updateProgressBar() {
-            const total = allTests[currentTestKey].questions.length;
-            const answered = Object.keys(userAnswers[currentTestKey] || {}).length;
-            document.getElementById('progressBar').style.width = (answered / total * 100) + '%';
-        }
-
-        function submitTest() {
-            const test = allTests[currentTestKey];
-            let score = 0;
-            test.questions.forEach(q => {
-                const ans = userAnswers[currentTestKey][q.id];
-                const card = document.getElementById(`q-card-${q.id}`);
-                const options = document.getElementById(`options-${q.id}`).querySelectorAll('.option-card');
-                options.forEach((opt, i) => {
-                    const label = ['A', 'B', 'C', 'D'][i];
-                    opt.style.pointerEvents = 'none';
-                    if (label === q.a) opt.classList.add('correct');
-                    else if (label === ans) opt.classList.add('incorrect');
-                });
-                if (ans === q.a) score++;
-            });
-
-            // Lưu lịch sử
-            const bestScore = testHistory[currentTestKey]?.score || 0;
-            testHistory[currentTestKey] = {
-                title: test.title,
-                score: Math.max(score, bestScore),
-                total: test.questions.length,
-                date: new Date().toLocaleDateString('vi-VN')
+            const payload = {
+                userName: appState.name, 
+                testTitle: test.title,
+                score: score // Gửi điểm dạng số nguyên, vd: 25
             };
-            localStorage.setItem('toeic_history', JSON.stringify(testHistory));
-            updateDashboard();
 
-            // Hiển thị modal
-            document.getElementById('finalScore').innerText = score;
-            const feedback = score >= 25 ? "Tuyệt vời! Bạn đã sẵn sàng đi thi." : (score >= 15 ? "Khá tốt! Hãy luyện thêm các câu sai." : "Bạn cần cố gắng nhiều hơn.");
-            document.getElementById('feedbackText').innerText = feedback;
-            document.getElementById('resultEmoji').innerText = score >= 25 ? "🏆" : "📈";
-            document.getElementById('resultModal').classList.remove('hidden');
-        // ĐOẠN MÃ GỬI DỮ LIỆU ĐÃ CHỈNH SỬA:
-    const payload = {
-        userName: appState.name, // Lấy từ thông tin học viên nhập lúc đầu
-        score: `${score}/${test.questions.length}` // Ví dụ: "25/30"
-    };
+            // DÁN URL WEB APP CỦA BẠN VÀO ĐÂY (NHỚ LÀ URL MỚI NHẤT NHÉ)
+            const webAppUrl = "https://script.google.com/macros/s/AKfycbzLsqeH-fyUJ8M7pd-zSlKKjMMLo9UYqvAStk2ryb6qLV-EVoXT4YxfhaIFD6_EkK4/exec";
 
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbzLsqeH-fyUJ8M7pd-zSlKKjMMLo9UYqvAStk2ryb6qLV-EVoXT4YxfhaIFD6_EkK4/exec";
+            fetch(webAppUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                body: JSON.stringify(payload)
+            })
+            .then(() => console.log("Đã gửi lệnh ghi điểm!"))
+            .catch(err => console.error("Lỗi:", err));
+        }
 
-    fetch(webAppUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        cache: 'no-cache',
-        body: JSON.stringify(payload)
-    })
-    .then(() => console.log("Ghi điểm thành công!"))
-    .catch(err => console.error("Lỗi:", err));
-}}
-
+        // --- 7. DASHBOARD & TIỆN ÍCH KHÁC ---
         function updateDashboard() {
             const historyKeys = Object.keys(testHistory);
             document.getElementById('statsCompleted').innerText = historyKeys.length;
@@ -667,7 +470,7 @@
                 totalCorrect += testHistory[k].score;
                 totalQ += testHistory[k].total;
             });
-            const avg = totalQ > 0 ? Math.round(totalCorrect / totalQ * 100) : 0;
+            const avg = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0;
             document.getElementById('statsAvg').innerText = avg + '%';
 
             const list = document.getElementById('dashboardList');
@@ -719,7 +522,15 @@
 
         function resetCurrentTest() { loadTest(currentTestKey); window.scrollTo({ top: 0, behavior: 'smooth' }); }
         function closeModal() { document.getElementById('resultModal').classList.add('hidden'); }
+        function resetAllData() {
+            if(confirm("⚠️ Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu học tập và Họ tên không? Thao tác này không thể hoàn tác.")) {
+                localStorage.removeItem('toeic_history_v2');
+                localStorage.removeItem('toeic_user_profile_v2');
+                location.reload();
+            }
+        }
 
+        // Kích hoạt khi tải trang
         window.onload = initApp;
     </script>
 </body>
